@@ -1,46 +1,31 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  # 1. Dịch vụ Cơ sở dữ liệu MySQL
   mysql:
     image: mysql:8.0
-    container_name: shopcloud_clean_mysql
-    # Câu lệnh ép MySQL nhận định dạng UTF-8 chuẩn tiếng Việt
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass123
-      MYSQL_DATABASE: shopdb
-      MYSQL_USER: shopuser
-      MYSQL_PASSWORD: shoppass123
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shopcloud
     ports:
-      - "3307:3306" # Chạy cổng 3307 ở máy vật lý để tránh trùng mạng
+      - "3306:3306"
     volumes:
-      - mysql_clean_data:/var/lib/mysql
-      # Tự động chạy file init.sql khi tạo database lần đầu
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - shop_network
+      - mysql_data:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d
 
-  # 2. Dịch vụ Backend (Node.js/Express)
   backend:
-    build: ./backend
-    container_name: shopcloud_clean_backend
-    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
       - DB_HOST=mysql
-      - DB_USER=shopuser
-      - DB_PASSWORD=shoppass123
-      - DB_NAME=shopdb
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=shopcloud
+      - PORT=3000
     depends_on:
       - mysql
-    networks:
-      - shop_network
 
 volumes:
-  mysql_clean_data:
-
-networks:
-  shop_network:
+  mysql_data:
